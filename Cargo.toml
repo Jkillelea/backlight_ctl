@@ -1,0 +1,7 @@
+[package]
+name = "backlight_ctl"
+version = "0.1.0"
+authors = ["Jacob Killelea <Jkillelea@protonmail.ch>"]
+
+[dependencies]
+dbus = "0.6.1"

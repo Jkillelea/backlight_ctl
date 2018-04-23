@@ -1,6 +1,6 @@
 extern crate dbus;
 
-use std::{env, rc::Rc, cell::Cell};
+use std::env;
 use dbus::{Connection, BusType, Message};
 
 fn main() {
@@ -8,7 +8,7 @@ fn main() {
 
     let mut args = env::args();
     args.next(); // skip program name
-    while let Some(arg) = args.next() {
+    while let Some(arg) = args.next() { // arg parsing
         match arg.as_str() {
             "set"  => if let Some(val) = args.next() {
                             if let Ok(percent) = val.parse() {
@@ -27,31 +27,14 @@ fn print_usage() {
     println!("Usage: backlight_ctl {{up, down, get, set <val>}}");
 }
 
-// this method is gross but I'm not sure about a better way
 fn get_percentage(c: &Connection) -> u32 {
+    let timeout = 200; // milliseconds?
     let msg = Message::new_method_call("org.gnome.SettingsDaemon.Power",
                                         "/org/gnome/SettingsDaemon/Power",
                                         "org.gnome.SettingsDaemon.Power.Screen",
                                         "GetPercentage").unwrap();
-
-    // In order to talk back and forth across this closeure whose liftime we don't know
-    // I'm using Rc (reference counted) Cells (which allow for mutable interiors)
-    let data = Rc::new(Cell::new(0));     // hold data
-    let done = Rc::new(Cell::new(false)); // hold done state
-    let data_clone = data.clone();        // clones only clone the Rc pointer, which goes to same data
-    let done_clone = done.clone();
-
-    c.add_handler(c.send_with_reply(msg, move |reply| {
-        let percentage: u32 = reply.unwrap().read1().unwrap();
-        data_clone.set(percentage);
-        done_clone.set(true);
-    }).unwrap());
-
-    // process incoming message and wait for closure to finish.
-    while !done.get() {
-        c.incoming(10).next();
-    }
-    data.get()
+    let resp = c.send_with_reply_and_block(msg, timeout);
+    resp.unwrap().read1().unwrap()
 }
 
 fn set_percentage(c: &Connection, percent: u32) {

@@ -31,7 +31,7 @@ fn print_usage() {
 
 fn get_percentage(c: &Connection) -> u32 {
     let timeout = 200; // milliseconds?
-    let msg = Message::new_method_call("org.gnome.SettingsDaemon.Power",         // destination
+    let msg = Message::new_method_call("org.gnome.SettingsDaemon.Power",        // destination
                                        "/org/gnome/SettingsDaemon/Power",       // path
                                        "org.gnome.SettingsDaemon.Power.Screen", // interface
                                        "GetPercentage").unwrap();               // method

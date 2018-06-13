@@ -4,6 +4,8 @@ use std::env;
 use std::process;
 use dbus::{Connection, BusType, Message};
 
+mod powerdaemon_sys; 
+
 fn main() {
     let conn = Connection::get_private(BusType::Session).unwrap();
 
@@ -35,16 +37,32 @@ fn get_percentage(c: &Connection) -> u32 {
                                        "/org/gnome/SettingsDaemon/Power",       // path
                                        "org.gnome.SettingsDaemon.Power.Screen", // interface
                                        "GetPercentage").unwrap();               // method
-    let resp = c.send_with_reply_and_block(msg, timeout);
-    resp.unwrap().read1().unwrap()
+    let result = c.send_with_reply_and_block(msg, timeout);
+    if result.is_ok() {
+        result.unwrap().read1().unwrap()
+    } else {
+        use powerdaemon_sys::*;
+
+        let connpath = dbus::ConnPath {
+            conn: c,
+            dest: dbus::BusName::new("org.gnome.SettingsDaemon.Power").unwrap(),
+            path: dbus::Path::new("/org/gnomem/SettingsDaemon/Power").unwrap(),
+            timeout: 1000i32 // (ms)
+        };
+        connpath.get_brightness().unwrap() as u32
+    }
 }
 
 fn set_percentage(c: &Connection, percent: u32) {
-    let msg = Message::new_method_call("org.gnome.SettingsDaemon.Power",
-                                       "/org/gnome/SettingsDaemon/Power",
-                                       "org.gnome.SettingsDaemon.Power.Screen",
-                                       "SetPercentage").unwrap().append(percent);
-    c.send(msg).unwrap();
+    use powerdaemon_sys::*;
+
+    let connpath = dbus::ConnPath {
+        conn: c,
+        dest: dbus::BusName::new("org.gnome.SettingsDaemon.Power").unwrap(),
+        path: dbus::Path::new("/org/gnome/SettingsDaemon/Power").unwrap(),
+        timeout: 1000i32 // (ms)
+    };
+    connpath.set_brightness(percent as i32).unwrap()
 }
 
 fn step_down(c: &Connection) {

@@ -46,7 +46,7 @@ fn get_percentage(c: &Connection) -> u32 {
         let connpath = dbus::ConnPath {
             conn: c,
             dest: dbus::BusName::new("org.gnome.SettingsDaemon.Power").unwrap(),
-            path: dbus::Path::new("/org/gnomem/SettingsDaemon/Power").unwrap(),
+            path: dbus::Path::new("/org/gnome/SettingsDaemon/Power").unwrap(),
             timeout: 1000i32 // (ms)
         };
         connpath.get_brightness().unwrap() as u32

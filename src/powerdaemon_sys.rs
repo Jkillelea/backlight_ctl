@@ -10,7 +10,10 @@ pub trait OrgGnomeSettingsDaemonPowerScreen {
     fn set_brightness(&self, value: i32) -> Result<(), Self::Err>;
 }
 
-impl<'a, C: Deref<Target=dbus::Connection>> OrgGnomeSettingsDaemonPowerScreen for dbus::ConnPath<'a, C> {
+// impl<'a, C: Deref<Target = dbus::Connection>> OrgGnomeSettingsDaemonPowerScreen for dbus::ConnPath<'a, C> {
+impl<'a, C> OrgGnomeSettingsDaemonPowerScreen for dbus::ConnPath<'a, C>
+    where C: Deref<Target = dbus::Connection>
+{
     type Err = dbus::Error;
 
     fn step_up(&self) -> Result<(i32, i32), Self::Err> {
